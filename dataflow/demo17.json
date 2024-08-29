@@ -31,7 +31,7 @@
 			],
 			"scriptLines": [
 				"parameters{",
-				"     cnpjCl as string ('cnpj'),",
+				"     cnpjCl as string ('numcnpj'),",
 				"     dtCl as string ('dt_emissao'),",
 				"     vlrCl as string ('valor')",
 				"}",
