@@ -1,0 +1,46 @@
+{
+	"name": "demo17",
+	"properties": {
+		"activities": [
+			{
+				"name": "demo17",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "demo17",
+						"type": "DataFlowReference",
+						"parameters": {
+							"cnpjCl": "'cnpj'",
+							"dtCl": "'data_emissao'",
+							"vlrCl": "'valor'"
+						},
+						"datasetParameters": {
+							"source1": {
+								"container": "treinamento",
+								"filePath": "arquivos_raw",
+								"fileName": "notas_fiscais.csv"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T02:15:41Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

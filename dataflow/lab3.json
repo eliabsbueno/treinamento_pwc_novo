@@ -1,0 +1,93 @@
+{
+	"name": "lab3",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "empresas",
+						"type": "DatasetReference"
+					},
+					"name": "empresas"
+				},
+				{
+					"dataset": {
+						"referenceName": "notasFiscais",
+						"type": "DatasetReference"
+					},
+					"name": "nfs"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "saida_lab",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "cnpjnumerico"
+				},
+				{
+					"name": "splitendereco"
+				},
+				{
+					"name": "padronizacep"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "vlrnotas"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          razao_social as string,",
+				"          endereco as string,",
+				"          cidade as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> empresas",
+				"source(output(",
+				"          cnpj as string,",
+				"          numero_nf as string,",
+				"          valor as string,",
+				"          data_emissao as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> nfs",
+				"empresas derive(cnpjnumerico = replace(replace(replace(cnpj, '-', ''), '.', ''), '/', '')) ~> cnpjnumerico",
+				"cnpjnumerico derive(cep = split(endereco, ',')[1],",
+				"          logradouro = split(endereco, ',')[2],",
+				"          numero = toInteger(split(endereco, ',')[3])) ~> splitendereco",
+				"splitendereco derive(cep_padronizado = concat(left(replace(cep, '-', ''), 5), '-', right(replace(cep, '-', ''), 3))) ~> padronizacep",
+				"padronizacep, nfs join(empresas@cnpj == nfs@cnpj,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 aggregate(groupBy(empresas@cnpj,",
+				"          razao_social),",
+				"     vlr_notas = sum(toDouble(valor))) ~> vlrnotas",
+				"vlrnotas sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['vlr_por_cnpj.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

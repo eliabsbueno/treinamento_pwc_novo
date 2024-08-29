@@ -1,0 +1,60 @@
+{
+	"name": "demo17",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_generico",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     cnpjCl as string ('cnpj'),",
+				"     dtCl as string ('data_emissao'),",
+				"     vlrCl as string ('valor')",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(cnpj = byName($cnpjCl),",
+				"          ano_emissao = year(toDate(byName($dtCl))),",
+				"          valor = toDouble(byName($vlrCl))) ~> derivedColumn1",
+				"derivedColumn1 aggregate(groupBy(cnpj,",
+				"          ano_emissao),",
+				"     vlr_total = sum(valor)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['dados_sem_schema.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

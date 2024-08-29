@@ -1,0 +1,62 @@
+{
+	"name": "dados_anuais",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "arquivos_raw/dados_anuais",
+				"fileSystem": "treinamento"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cnpj",
+				"type": "String"
+			},
+			{
+				"name": "nome_empresa",
+				"type": "String"
+			},
+			{
+				"name": "nr_nota",
+				"type": "String"
+			},
+			{
+				"name": "dt_emissao",
+				"type": "String"
+			},
+			{
+				"name": "valor",
+				"type": "String"
+			},
+			{
+				"name": "municipio",
+				"type": "String"
+			},
+			{
+				"name": "estado",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

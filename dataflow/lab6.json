@@ -1,0 +1,119 @@
+{
+	"name": "lab6",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dados_anuais",
+						"type": "DatasetReference"
+					},
+					"name": "dados2020"
+				},
+				{
+					"dataset": {
+						"referenceName": "dados_anuais",
+						"type": "DatasetReference"
+					},
+					"name": "dados2021"
+				},
+				{
+					"dataset": {
+						"referenceName": "dados_anuais",
+						"type": "DatasetReference"
+					},
+					"name": "dados2022"
+				},
+				{
+					"dataset": {
+						"referenceName": "dados_anuais",
+						"type": "DatasetReference"
+					},
+					"name": "dados2023"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "unionAll"
+				},
+				{
+					"name": "anoEmissao"
+				},
+				{
+					"name": "somaValorPorAno"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dados2020",
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dados2021",
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dados2022",
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dados2023",
+				"dados2020, dados2021, dados2022, dados2023 union(byName: true)~> unionAll",
+				"unionAll derive(ano_emissao = year(toDate(dt_emissao))) ~> anoEmissao",
+				"anoEmissao aggregate(groupBy(ano_emissao),",
+				"     soma_total = sum(toDouble(valor))) ~> somaValorPorAno",
+				"somaValorPorAno sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

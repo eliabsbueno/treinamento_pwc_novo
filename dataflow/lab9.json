@@ -1,0 +1,110 @@
+{
+	"name": "lab9",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_patrimonio",
+						"type": "DatasetReference"
+					},
+					"name": "patrimonio"
+				},
+				{
+					"dataset": {
+						"referenceName": "saldos_caixa",
+						"type": "DatasetReference"
+					},
+					"name": "saldoCaixa"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "saida_lab",
+						"type": "DatasetReference"
+					},
+					"name": "unpivotSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "pivot1"
+				},
+				{
+					"name": "unpivot1"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          ano as string,",
+				"          patrimonio as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> patrimonio",
+				"source(output(",
+				"          cnpj as string,",
+				"          saldo_jan as string,",
+				"          saldo_fev as string,",
+				"          saldo_mar as string,",
+				"          saldo_abr as string,",
+				"          saldo_mai as string,",
+				"          saldo_jun as string,",
+				"          saldo_jul as string,",
+				"          saldo_ago as string,",
+				"          saldo_set as string,",
+				"          saldo_out as string,",
+				"          saldo_nov as string,",
+				"          saldo_dez as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> saldoCaixa",
+				"patrimonio pivot(groupBy(cnpj),",
+				"     pivotBy(ano),",
+				"     {} = sum(toDouble(patrimonio)),",
+				"     columnNaming: 'ano_$N$V',",
+				"     lateral: true) ~> pivot1",
+				"saldoCaixa unpivot(output(",
+				"          mes as string,",
+				"          saldo as string",
+				"     ),",
+				"     ungroupBy(cnpj),",
+				"     lateral: true,",
+				"     ignoreNullPivots: false) ~> unpivot1",
+				"unpivot1 derive(mes = split(mes, '_')[2]) ~> derivedColumn1",
+				"pivot1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['pivot.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['unpivot.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> unpivotSink"
+			]
+		}
+	}
+}

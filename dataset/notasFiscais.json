@@ -1,0 +1,42 @@
+{
+	"name": "notasFiscais",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "notas_fiscais.csv",
+				"folderPath": "arquivos_raw",
+				"fileSystem": "treinamento"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cnpj",
+				"type": "String"
+			},
+			{
+				"name": "numero_nf",
+				"type": "String"
+			},
+			{
+				"name": "valor",
+				"type": "String"
+			},
+			{
+				"name": "data_emissao",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

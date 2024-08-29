@@ -1,0 +1,60 @@
+{
+	"name": "lab8",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dados_anuais_wildcard",
+						"type": "DatasetReference"
+					},
+					"name": "dadosAnuais"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "anoEmissao"
+				},
+				{
+					"name": "mediaValorEmpresaAno"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dadosAnuais",
+				"dadosAnuais derive(ano_emissao = year(toDate(dt_emissao))) ~> anoEmissao",
+				"anoEmissao aggregate(groupBy(cnpj,",
+				"          nome_empresa,",
+				"          ano_emissao),",
+				"     valor_total = toLong(avg(toDouble(valor)))) ~> mediaValorEmpresaAno",
+				"mediaValorEmpresaAno sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

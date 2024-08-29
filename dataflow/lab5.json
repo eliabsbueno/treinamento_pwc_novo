@@ -1,0 +1,103 @@
+{
+	"name": "lab5",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "saldos_caixa_brl",
+						"type": "DatasetReference"
+					},
+					"name": "saldosBrl"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "convertToDouble"
+				},
+				{
+					"name": "removeBRL"
+				},
+				{
+					"name": "replacePonto"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          saldo_jan as string,",
+				"          saldo_fev as string,",
+				"          saldo_mar as string,",
+				"          saldo_abr as string,",
+				"          saldo_mai as string,",
+				"          saldo_jun as string,",
+				"          saldo_jul as string,",
+				"          saldo_ago as string,",
+				"          saldo_set as string,",
+				"          saldo_out as string,",
+				"          saldo_nov as string,",
+				"          saldo_dez as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> saldosBrl",
+				"replacePonto derive(each(match(like(name,'saldo%')), $$ + '_double' = toDouble($$))) ~> convertToDouble",
+				"saldosBrl derive(each(match(like(name,'saldo%')), $$ = replace(replace($$, 'R$ ', ''), '.', ''))) ~> removeBRL",
+				"removeBRL derive(each(match(like(name,'saldo%')), $$ = replace($$, ',', '.'))) ~> replacePonto",
+				"convertToDouble derive(saldo_jan_double = toDouble(byName('saldo_jan_double')),",
+				"          saldo_fev_double = toDouble(byName('saldo_fev_double')),",
+				"          saldo_mar_double = toDouble(byName('saldo_mar_double')),",
+				"          saldo_abr_double = toDouble(byName('saldo_abr_double')),",
+				"          saldo_mai_double = toDouble(byName('saldo_mai_double')),",
+				"          saldo_jun_double = toDouble(byName('saldo_jun_double')),",
+				"          saldo_jul_double = toDouble(byName('saldo_jul_double')),",
+				"          saldo_ago_double = toDouble(byName('saldo_ago_double')),",
+				"          saldo_set_double = toDouble(byName('saldo_set_double')),",
+				"          saldo_out_double = toDouble(byName('saldo_out_double')),",
+				"          saldo_nov_double = toDouble(byName('saldo_nov_double')),",
+				"          saldo_dez_double = toDouble(byName('saldo_dez_double'))) ~> MapDrifted1",
+				"MapDrifted1 select(mapColumn(",
+				"          cnpj,",
+				"          saldo_jan = saldo_jan_double,",
+				"          saldo_fev = saldo_fev_double,",
+				"          saldo_mar = saldo_mar_double,",
+				"          saldo_abr = saldo_abr_double,",
+				"          saldo_mai = saldo_mai_double,",
+				"          saldo_jun = saldo_jun_double,",
+				"          saldo_jul = saldo_jul_double,",
+				"          saldo_ago = saldo_ago_double,",
+				"          saldo_set = saldo_set_double,",
+				"          saldo_out = saldo_out_double,",
+				"          saldo_nov = saldo_nov_double,",
+				"          saldo_dez = saldo_dez_double",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

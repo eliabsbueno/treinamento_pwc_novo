@@ -1,0 +1,38 @@
+{
+	"name": "ds_patrimonio",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "patrimonio.csv",
+				"folderPath": "arquivos_raw",
+				"fileSystem": "treinamento"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cnpj",
+				"type": "String"
+			},
+			{
+				"name": "ano",
+				"type": "String"
+			},
+			{
+				"name": "patrimonio",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

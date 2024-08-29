@@ -1,0 +1,119 @@
+{
+	"name": "demo15",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dados_anuais_wildcard",
+						"type": "DatasetReference"
+					},
+					"name": "dadosAnuais"
+				},
+				{
+					"dataset": {
+						"referenceName": "saldos_caixa",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "anoEmissao"
+				},
+				{
+					"name": "pivotAnoEmissao"
+				},
+				{
+					"name": "unpivot1"
+				},
+				{
+					"name": "padronizacaoMes"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as string,",
+				"          valor as string,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dadosAnuais",
+				"source(output(",
+				"          cnpj as string,",
+				"          saldo_jan as string,",
+				"          saldo_fev as string,",
+				"          saldo_mar as string,",
+				"          saldo_abr as string,",
+				"          saldo_mai as string,",
+				"          saldo_jun as string,",
+				"          saldo_jul as string,",
+				"          saldo_ago as string,",
+				"          saldo_set as string,",
+				"          saldo_out as string,",
+				"          saldo_nov as string,",
+				"          saldo_dez as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"dadosAnuais derive(ano_emissao = year(toDate(dt_emissao))) ~> anoEmissao",
+				"anoEmissao pivot(groupBy(cnpj,",
+				"          nome_empresa),",
+				"     pivotBy(ano_emissao),",
+				"     {} = sum(toDouble(valor)),",
+				"     columnNaming: 'ano_$N$V',",
+				"     lateral: true) ~> pivotAnoEmissao",
+				"source1 unpivot(output(",
+				"          mes_saldo as string,",
+				"          saldo as string",
+				"     ),",
+				"     ungroupBy(cnpj),",
+				"     lateral: true,",
+				"     ignoreNullPivots: false) ~> unpivot1",
+				"unpivot1 derive(mes_saldo = right(mes_saldo, 3)) ~> padronizacaoMes",
+				"pivotAnoEmissao sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['pivot'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1",
+				"padronizacaoMes sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['unpivot'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink2"
+			]
+		}
+	}
+}

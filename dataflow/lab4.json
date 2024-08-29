@@ -1,0 +1,133 @@
+{
+	"name": "lab4",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "notasFiscais",
+						"type": "DatasetReference"
+					},
+					"name": "nfs"
+				},
+				{
+					"dataset": {
+						"referenceName": "empresas",
+						"type": "DatasetReference"
+					},
+					"name": "empresas"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				},
+				{
+					"dataset": {
+						"referenceName": "lab_output",
+						"type": "DatasetReference"
+					},
+					"name": "sink3"
+				}
+			],
+			"transformations": [
+				{
+					"name": "convertToDouble"
+				},
+				{
+					"name": "agregacao1"
+				},
+				{
+					"name": "colunaAnoEmissao"
+				},
+				{
+					"name": "joinEmpresas"
+				},
+				{
+					"name": "agregacao2"
+				},
+				{
+					"name": "agregacao3"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          numero_nf as string,",
+				"          valor as string,",
+				"          data_emissao as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> nfs",
+				"source(output(",
+				"          cnpj as string,",
+				"          razao_social as string,",
+				"          endereco as string,",
+				"          cidade as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> empresas",
+				"nfs derive(valor = toDecimal(valor)) ~> convertToDouble",
+				"colunaAnoEmissao aggregate(groupBy(ano_emissao),",
+				"     vlr_total = sum(valor),",
+				"          menor_valor = min(valor),",
+				"          maior_valor = max(valor)) ~> agregacao1",
+				"convertToDouble derive(ano_emissao = left(data_emissao, 4)) ~> colunaAnoEmissao",
+				"colunaAnoEmissao, empresas join(nfs@cnpj == empresas@cnpj,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinEmpresas",
+				"joinEmpresas aggregate(groupBy(estado,",
+				"          cidade),",
+				"     vlr_medio = avg(valor),",
+				"          qtd_notas = countAll(numero_nf)) ~> agregacao2",
+				"joinEmpresas aggregate(groupBy(estado),",
+				"     qtd_cidades = countAllDistinct(cidade),",
+				"          vlr_total = sum(valor)) ~> agregacao3",
+				"agregacao1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['valores_por_ano.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1",
+				"agregacao2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['vlr_cidade_estado.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink2",
+				"agregacao3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['vlr_estado.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink3"
+			]
+		}
+	}
+}

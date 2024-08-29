@@ -1,0 +1,9 @@
+{
+	"name": "adf-treinamento-pwc",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d0088de8-71f5-4960-adc8-52fd9ed2936d",
+		"tenantId": "b7c57ab6-e5fc-4d6b-a627-cbe9ed246401"
+	}
+}
