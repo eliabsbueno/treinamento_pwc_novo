@@ -1,0 +1,63 @@
+{
+	"name": "lab13",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dados_anuais_wildcard",
+						"type": "DatasetReference"
+					},
+					"name": "dadosAnuais"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "anoMes"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "minMax"
+				},
+				{
+					"name": "flgMinMax"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          nome_empresa as string,",
+				"          nr_nota as string,",
+				"          dt_emissao as date,",
+				"          valor as double,",
+				"          municipio as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dadosAnuais",
+				"dadosAnuais derive(ano_mes = toString(dt_emissao, 'yyyyMM')) ~> anoMes",
+				"anoMes select(mapColumn(",
+				"          cnpj,",
+				"          dt_emissao,",
+				"          valor,",
+				"          ano_mes",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 window(over(cnpj,",
+				"          ano_mes),",
+				"     asc(dt_emissao, true),",
+				"     rangeSpecified: true,",
+				"     menor_valor = min(valor),",
+				"          maior_valor = max(valor)) ~> minMax",
+				"minMax derive(flg_menor = case(valor == menor_valor, 'True', 'False'),",
+				"          flg_maior = case(valor == maior_valor, 'True', 'False')) ~> flgMinMax"
+			]
+		}
+	}
+}
