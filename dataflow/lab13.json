@@ -12,7 +12,15 @@
 					"name": "dadosAnuais"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "saida_lab",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "anoMes"
@@ -25,6 +33,15 @@
 				},
 				{
 					"name": "flgMinMax"
+				},
+				{
+					"name": "mediaMovel"
+				},
+				{
+					"name": "mediaDif"
+				},
+				{
+					"name": "select2"
 				}
 			],
 			"scriptLines": [
@@ -56,7 +73,33 @@
 				"     menor_valor = min(valor),",
 				"          maior_valor = max(valor)) ~> minMax",
 				"minMax derive(flg_menor = case(valor == menor_valor, 'True', 'False'),",
-				"          flg_maior = case(valor == maior_valor, 'True', 'False')) ~> flgMinMax"
+				"          flg_maior = case(valor == maior_valor, 'True', 'False')) ~> flgMinMax",
+				"flgMinMax window(over(cnpj),",
+				"     asc(dt_emissao, true),",
+				"     rangeSpecified: true,",
+				"     startRowOffset: -5L,",
+				"     endRowOffset: 0L,",
+				"     media_ultimas = avg(valor)) ~> mediaMovel",
+				"mediaMovel derive(mediaDif = valor - media_ultimas) ~> mediaDif",
+				"mediaDif select(mapColumn(",
+				"          cnpj,",
+				"          dt_emissao,",
+				"          valor,",
+				"          flg_menor,",
+				"          flg_maior,",
+				"          mediaDif",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['lab13.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
 			]
 		}
 	}
