@@ -21,18 +21,23 @@
 		},
 		"schema": [
 			{
+				"name": "cnpj",
 				"type": "String"
 			},
 			{
+				"name": "razao_social",
 				"type": "String"
 			},
 			{
+				"name": "endereco",
 				"type": "String"
 			},
 			{
+				"name": "cidade",
 				"type": "String"
 			},
 			{
+				"name": "estado",
 				"type": "String"
 			}
 		]
