@@ -1,0 +1,36 @@
+{
+	"name": "flowlet1",
+	"properties": {
+		"type": "Flowlet",
+		"typeProperties": {
+			"sources": [],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "entradadados"
+				},
+				{
+					"name": "saidadados"
+				}
+			],
+			"scriptLines": [
+				"input(output(",
+				"          numero_cnpj as string,",
+				"          valor_nota as string",
+				"     ),",
+				"     order: 0,",
+				"     allowSchemaDrift: true) ~> entradadados",
+				"entradadados derive(valor_nota = toDouble(valor_nota)) ~> derivedColumn1",
+				"derivedColumn1 aggregate(groupBy(numero_cnpj),",
+				"     soma_valores = sum(valor_nota)) ~> aggregate1",
+				"aggregate1 output() ~> saidadados"
+			]
+		}
+	}
+}
