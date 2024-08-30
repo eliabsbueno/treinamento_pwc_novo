@@ -1,0 +1,45 @@
+{
+	"name": "contatos",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "contatos.csv",
+				"folderPath": "arquivos_raw",
+				"fileSystem": "treinamento"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cnpj",
+				"type": "String"
+			},
+			{
+				"name": "nome_contato",
+				"type": "String"
+			},
+			{
+				"name": "email",
+				"type": "String"
+			},
+			{
+				"name": "telefone",
+				"type": "String"
+			},
+			{
+				"name": "data_insercao",
+				"type": "String"
+			}
+		]
+	}
+}
