@@ -10,9 +10,24 @@
 						"type": "DatasetReference"
 					},
 					"name": "empresas"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_notas_fiscais",
+						"type": "DatasetReference"
+					},
+					"name": "nf"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "saida_laboratorios",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "cnpjNumerico"
@@ -22,6 +37,9 @@
 				},
 				{
 					"name": "padronizaCep"
+				},
+				{
+					"name": "innerJoin"
 				}
 			],
 			"scriptLines": [
@@ -35,11 +53,34 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> empresas",
+				"source(output(",
+				"          cnpj as string,",
+				"          numero_nf as string,",
+				"          valor as string,",
+				"          data_emissao as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> nf",
 				"empresas derive(cnpj_numerico = replace(replace(replace(cnpj, '.', ''), '/', ''), '-', '')) ~> cnpjNumerico",
 				"cnpjNumerico derive(cep = split(endereco, ',')[1],",
 				"          logradouro = split(endereco, ',')[2],",
 				"          numero = split(endereco, ',')[3]) ~> splitEndereco",
-				"splitEndereco derive(cep_padronizado = concat(left(cep, 5), '-', right(cep, 3))) ~> padronizaCep"
+				"splitEndereco derive(cep_padronizado = concat(left(cep, 5), '-', right(cep, 3))) ~> padronizaCep",
+				"padronizaCep, nf join(empresas@cnpj == nf@cnpj,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> innerJoin",
+				"innerJoin sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['laboratorio1.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
 			]
 		}
 	}
