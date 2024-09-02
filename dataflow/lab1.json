@@ -1,0 +1,46 @@
+{
+	"name": "lab1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_empresas",
+						"type": "DatasetReference"
+					},
+					"name": "empresas"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "cnpjNumerico"
+				},
+				{
+					"name": "splitEndereco"
+				},
+				{
+					"name": "padronizaCep"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cnpj as string,",
+				"          razao_social as string,",
+				"          endereco as string,",
+				"          cidade as string,",
+				"          estado as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> empresas",
+				"empresas derive(cnpj_numerico = replace(replace(replace(cnpj, '.', ''), '/', ''), '-', '')) ~> cnpjNumerico",
+				"cnpjNumerico derive(cep = split(endereco, ',')[1],",
+				"          logradouro = split(endereco, ',')[2],",
+				"          numero = split(endereco, ',')[3]) ~> splitEndereco",
+				"splitEndereco derive(cep_padronizado = concat(left(cep, 5), '-', right(cep, 3))) ~> padronizaCep"
+			]
+		}
+	}
+}
